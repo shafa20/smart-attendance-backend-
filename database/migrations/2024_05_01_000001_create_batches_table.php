@@ -11,10 +11,11 @@ return new class extends Migration
         Schema::create('batches', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('course_name');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
+            $table->enum('status', ['active', 'upcoming', 'completed']);
             $table->text('description')->nullable();
-            $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
-            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

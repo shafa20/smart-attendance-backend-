@@ -10,14 +10,13 @@ return new class extends Migration
     {
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id')->constrained()->onDelete('cascade');
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['present', 'absent', 'late']);
-            $table->dateTime('marked_at');
-            $table->string('remarks')->nullable();
+            $table->foreignId('class_session_id')->constrained('classes')->onDelete('cascade');
+            $table->foreignId('student_id')->constrained('users')->onDelete('cascade');
+            $table->enum('status', ['present', 'absent', 'late'])->default('absent');
+            $table->dateTime('check_in_time')->nullable();
+            $table->dateTime('check_out_time')->nullable();
+            $table->text('remarks')->nullable();
             $table->timestamps();
-
-            $table->unique(['class_id', 'user_id']);
         });
     }
 

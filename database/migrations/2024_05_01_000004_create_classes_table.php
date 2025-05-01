@@ -15,9 +15,9 @@ return new class extends Migration
             $table->string('topic');
             $table->text('description')->nullable();
             $table->dateTime('start_time');
-            $table->integer('duration')->comment('Duration in minutes');
-            $table->string('meeting_link')->nullable();
-            $table->boolean('is_cancelled')->default(false);
+            $table->dateTime('end_time');
+            $table->enum('status', ['scheduled', 'ongoing', 'completed', 'cancelled'])->default('scheduled');
+            $table->string('room_number');
             $table->timestamps();
         });
     }
