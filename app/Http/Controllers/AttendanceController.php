@@ -47,9 +47,32 @@ class AttendanceController extends Controller
         return response()->json(['message' => 'Attendance marked successfully.', 'data' => $attendance]);
     }
 
+    // Helper function to check instructor's batch access (pivot table version)
+    private function checkBatchAccess($batch_id)
+    {
+        $user = auth()->user();
+        if ($user->role === 'admin') {
+            return true;
+        }
+        if ($user->role === 'instructor') {
+            // Check batch_instructor pivot table
+            $hasAccess = \DB::table('batch_instructor')
+                ->where('batch_id', $batch_id)
+                ->where('user_id', $user->id)
+                ->exists();
+            if (!$hasAccess) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     // Get total attendance stats for a batch
     public function batchAttendanceStats($batch_id)
     {
+        if (!$this->checkBatchAccess($batch_id)) {
+            return response()->json(['message' => 'This Batch not assigned to you'], 403);
+        }
         $totalClasses = \App\Models\ClassSession::where('batch_id', $batch_id)->count();
         $totalStudents = \App\Models\Batch::find($batch_id)?->students()->count();
         $totalAttendances = \App\Models\Attendance::whereIn('class_session_id', function($q) use ($batch_id) {
@@ -65,6 +88,9 @@ class AttendanceController extends Controller
     // Get most present student in a batch
     public function mostPresentStudent($batch_id)
     {
+        if (!$this->checkBatchAccess($batch_id)) {
+            return response()->json(['message' => 'Batch not found or not assigned to you'], 403);
+        }
         $student = \App\Models\Attendance::select('student_id', \DB::raw('COUNT(*) as present_count'))
             ->whereIn('class_session_id', function($q) use ($batch_id) {
                 $q->select('id')->from('classes')->where('batch_id', $batch_id);
@@ -86,6 +112,9 @@ class AttendanceController extends Controller
     // Get attendance trend for the past 30 days for a batch
     public function attendanceTrend($batch_id)
     {
+        if (!$this->checkBatchAccess($batch_id)) {
+            return response()->json(['message' => 'Batch not found or not assigned to you'], 403);
+        }
         $trend = \App\Models\Attendance::selectRaw('DATE(created_at) as date, COUNT(*) as count')
             ->whereIn('class_session_id', function($q) use ($batch_id) {
                 $q->select('id')->from('classes')->where('batch_id', $batch_id);
