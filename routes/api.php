@@ -3,6 +3,12 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ClassController;
+
+// Test route
+Route::get('/test', function() {
+    return response()->json(['message' => 'API is working']);
+});
 
 // Public routes
 Route::post('auth/login', [AuthController::class, 'login']);
@@ -19,6 +25,10 @@ Route::middleware('auth:api')->group(function () {
         Route::get('me', [AuthController::class, 'me']);
     });
 
+    // Class routes accessible by all authenticated users
+    Route::get('classes/upcoming', [ClassController::class, 'upcomingClasses']);
+    Route::get('classes/{class}', [ClassController::class, 'show']);
+
     // Student routes
     Route::middleware('role:student')->group(function () {
         // Add student specific routes here
@@ -26,7 +36,7 @@ Route::middleware('auth:api')->group(function () {
 
     // Instructor routes
     Route::middleware('role:instructor')->group(function () {
-        // Add instructor specific routes here
+        Route::post('classes/schedule', [ClassController::class, 'schedule']);
     });
 
     // Admin routes

@@ -58,13 +58,8 @@ class User extends Authenticatable implements JWTSubject
 
     public function batches()
     {
-        return $this->belongsToMany(Batch::class, 'batch_student', 'student_id', 'batch_id')
-            ->when($this->role === 'student', function ($query) {
-                return $query->wherePivot('student_id', $this->id);
-            })
-            ->when($this->role === 'instructor', function ($query) {
-                return $query->wherePivot('instructor_id', $this->id);
-            });
+        // Pivot table is batch_student with columns user_id and batch_id
+        return $this->belongsToMany(Batch::class, 'batch_student', 'user_id', 'batch_id');
     }
 
     public function attendances()

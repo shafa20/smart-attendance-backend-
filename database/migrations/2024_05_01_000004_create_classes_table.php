@@ -15,9 +15,9 @@ return new class extends Migration
             $table->string('topic');
             $table->text('description')->nullable();
             $table->dateTime('start_time');
-            $table->dateTime('end_time');
+            $table->dateTime('end_time')->nullable();
             $table->enum('status', ['scheduled', 'ongoing', 'completed', 'cancelled'])->default('scheduled');
-            $table->string('room_number');
+            $table->string('room_number')->nullable();
             $table->timestamps();
         });
     }
