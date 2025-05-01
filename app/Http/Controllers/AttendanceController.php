@@ -23,7 +23,7 @@ class AttendanceController extends Controller
         }
 
         $class = ClassSession::findOrFail($request->class_session_id);
-        echo "$class->id";
+        //echo "$class->id";
         $now =  Carbon::now('Asia/Dhaka');
         $start = Carbon::parse($class->start_time);
         $windowStart = $start->copy()->subMinutes(10);
