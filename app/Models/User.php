@@ -2,18 +2,17 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 use App\Models\Batch;
 use App\Models\Attendance;
-use App\Models\ClassSession;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -42,35 +41,34 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+    ];
+
+    public function getJWTIdentifier()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 
     public function batches()
     {
-        return $this->belongsToMany(Batch::class, 'batch_student')
-            ->withPivot('enrolled_at', 'is_active')
-            ->withTimestamps();
-    }
-
-    public function teachingBatches()
-    {
-        return $this->belongsToMany(Batch::class, 'batch_instructor')
-            ->withPivot('assigned_at', 'is_active')
-            ->withTimestamps();
+        return $this->belongsToMany(Batch::class, 'batch_student', 'student_id', 'batch_id')
+            ->when($this->role === 'student', function ($query) {
+                return $query->wherePivot('student_id', $this->id);
+            })
+            ->when($this->role === 'instructor', function ($query) {
+                return $query->wherePivot('instructor_id', $this->id);
+            });
     }
 
     public function attendances()
     {
-        return $this->hasMany(Attendance::class);
-    }
-
-    public function classes()
-    {
-        return $this->hasMany(ClassSession::class, 'instructor_id');
+        return $this->hasMany(Attendance::class, 'student_id');
     }
 }
