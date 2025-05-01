@@ -13,11 +13,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->api([
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+
             'throttle:60,1',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ]);
-
+        $middleware->append(\Illuminate\Http\Middleware\HandleCors::class);
         $middleware->alias([
             'auth' => \PHPOpenSourceSaver\JWTAuth\Http\Middleware\Authenticate::class,
             'auth.basic' => \Illuminate\Auth\Middleware\AuthenticateWithBasicAuth::class,
