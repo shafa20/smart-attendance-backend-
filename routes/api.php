@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ClassController;
+use App\Http\Controllers\AttendanceController;
 
 // Test route
 Route::get('/test', function() {
@@ -43,4 +44,6 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('role:admin')->group(function () {
         // Add admin specific routes here
     });
+
+    Route::post('/attendance', [AttendanceController::class, 'markAttendance']);
 });
