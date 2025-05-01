@@ -6,6 +6,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Batch;
+use App\Models\Attendance;
+use App\Models\ClassSession;
 
 class User extends Authenticatable
 {
@@ -21,6 +24,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role',
     ];
 
     /**
@@ -44,5 +48,29 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function batches()
+    {
+        return $this->belongsToMany(Batch::class, 'batch_student')
+            ->withPivot('enrolled_at', 'is_active')
+            ->withTimestamps();
+    }
+
+    public function teachingBatches()
+    {
+        return $this->belongsToMany(Batch::class, 'batch_instructor')
+            ->withPivot('assigned_at', 'is_active')
+            ->withTimestamps();
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function classes()
+    {
+        return $this->hasMany(ClassSession::class, 'instructor_id');
     }
 }
