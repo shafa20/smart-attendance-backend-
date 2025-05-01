@@ -46,4 +46,54 @@ class AttendanceController extends Controller
 
         return response()->json(['message' => 'Attendance marked successfully.', 'data' => $attendance]);
     }
+
+    // Get total attendance stats for a batch
+    public function batchAttendanceStats($batch_id)
+    {
+        $totalClasses = \App\Models\ClassSession::where('batch_id', $batch_id)->count();
+        $totalStudents = \App\Models\Batch::find($batch_id)?->students()->count();
+        $totalAttendances = \App\Models\Attendance::whereIn('class_session_id', function($q) use ($batch_id) {
+            $q->select('id')->from('classes')->where('batch_id', $batch_id);
+        })->count();
+        return response()->json([
+            'total_classes' => $totalClasses,
+            'total_students' => $totalStudents,
+            'total_attendances' => $totalAttendances
+        ]);
+    }
+
+    // Get most present student in a batch
+    public function mostPresentStudent($batch_id)
+    {
+        $student = \App\Models\Attendance::select('student_id', \DB::raw('COUNT(*) as present_count'))
+            ->whereIn('class_session_id', function($q) use ($batch_id) {
+                $q->select('id')->from('classes')->where('batch_id', $batch_id);
+            })
+            ->where('status', 'present')
+            ->groupBy('student_id')
+            ->orderByDesc('present_count')
+            ->first();
+        if (!$student) {
+            return response()->json(['message' => 'No attendance data found.'], 404);
+        }
+        $user = \App\Models\User::find($student->student_id);
+        return response()->json([
+            'student' => $user,
+            'present_count' => $student->present_count
+        ]);
+    }
+
+    // Get attendance trend for the past 30 days for a batch
+    public function attendanceTrend($batch_id)
+    {
+        $trend = \App\Models\Attendance::selectRaw('DATE(created_at) as date, COUNT(*) as count')
+            ->whereIn('class_session_id', function($q) use ($batch_id) {
+                $q->select('id')->from('classes')->where('batch_id', $batch_id);
+            })
+            ->whereBetween('created_at', [now()->subDays(30)->startOfDay(), now()->endOfDay()])
+            ->groupBy('date')
+            ->orderBy('date', 'asc')
+            ->get();
+        return response()->json($trend);
+    }
 }

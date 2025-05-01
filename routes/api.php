@@ -40,6 +40,13 @@ Route::middleware('auth:api')->group(function () {
         Route::post('classes/schedule', [ClassController::class, 'schedule']);
     });
 
+    // Instructor and admin stats routes
+    Route::middleware('role:instructor,admin')->group(function () {
+        Route::get('batch/{batch_id}/attendance-stats', [AttendanceController::class, 'batchAttendanceStats']);
+        Route::get('batch/{batch_id}/most-present-student', [AttendanceController::class, 'mostPresentStudent']);
+        Route::get('batch/{batch_id}/attendance-trend', [AttendanceController::class, 'attendanceTrend']);
+    });
+
     // Admin routes
     Route::middleware('role:admin')->group(function () {
         // Add admin specific routes here
