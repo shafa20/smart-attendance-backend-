@@ -49,8 +49,13 @@ Route::middleware('auth:api')->group(function () {
 
     // Admin routes
     Route::middleware('role:admin')->group(function () {
+        // Export attendance data (admin only)
+        Route::get('batches/export-attendance', [\App\Http\Controllers\BatchController::class, 'exportAttendance']);
         // Add admin specific routes here
     });
+
+    // Batches routes (admin: all, instructor: assigned)
+    Route::get('batches', [\App\Http\Controllers\BatchController::class, 'index']);
 
     Route::post('/attendance', [AttendanceController::class, 'markAttendance']);
 });
