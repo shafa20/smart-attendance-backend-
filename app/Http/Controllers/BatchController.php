@@ -49,18 +49,24 @@ class BatchController extends Controller
             // Header row
             fputcsv($handle, ['Batch Name', 'Student Name', 'Date', 'Status']);
 
-            // You may need to adjust this query based on your Attendance model structure
+            // Corrected query for attendance export
             $attendances = \DB::table('attendances')
-                ->join('batches', 'attendances.batch_id', '=', 'batches.id')
-                ->join('users', 'attendances.user_id', '=', 'users.id')
-                ->select('batches.name as batch_name', 'users.name as student_name', 'attendances.date', 'attendances.status')
+                ->join('classes', 'attendances.class_session_id', '=', 'classes.id')
+                ->join('batches', 'classes.batch_id', '=', 'batches.id')
+                ->join('users', 'attendances.student_id', '=', 'users.id')
+                ->select(
+                    'batches.name as batch_name',
+                    'users.name as student_name',
+                    'attendances.check_in_time',
+                    'attendances.status'
+                )
                 ->get();
 
             foreach ($attendances as $row) {
                 fputcsv($handle, [
                     $row->batch_name,
                     $row->student_name,
-                    $row->date,
+                    $row->check_in_time,
                     $row->status
                 ]);
             }
