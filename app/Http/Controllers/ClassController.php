@@ -54,11 +54,11 @@ class ClassController extends Controller
             ->orderBy('start_time', 'asc');
 
         if ($user->role === 'student') {
-            // Get batch IDs student belongs to, specify table to avoid ambiguous id
-            $batchIds = $user->batches()->pluck('batches.id')->toArray();
+            // Use studentBatches() for students
+            $batchIds = $user->studentBatches()->pluck('batches.id')->toArray();
             $query->whereIn('batch_id', $batchIds);
         } elseif ($user->role === 'instructor') {
-            // Instructors can see classes they're teaching
+            // Use instructorBatches() for instructors (or filter by instructor_id)
             $query->where('instructor_id', $user->id);
         }
 
@@ -74,7 +74,7 @@ class ClassController extends Controller
         $user = Auth::user();
         
         // Check if user has access to this class
-        if ($user->role === 'student' && !$user->batches()->where('batches.id', $class->batch_id)->exists()) {
+        if ($user->role === 'student' && !$user->studentBatches()->where('batches.id', $class->batch_id)->exists()) {
             return response()->json(['message' => 'You do not have access to this class'], 403);
         }
 
