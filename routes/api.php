@@ -51,6 +51,7 @@ Route::middleware('auth:api')->group(function () {
     Route::middleware('role:admin')->group(function () {
         // Export attendance data (admin only)
         Route::get('batches/export-attendance', [\App\Http\Controllers\BatchController::class, 'exportAttendance']);
+        Route::get('batches/export-attendance/{batch_id}', [\App\Http\Controllers\BatchController::class, 'exportAttendanceByBatch']);
         // Add admin specific routes here
     });
 

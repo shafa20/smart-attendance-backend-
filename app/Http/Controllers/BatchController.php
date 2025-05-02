@@ -36,7 +36,7 @@ class BatchController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        // Example: Export all attendance records as CSV
+        // Export all attendance records as CSV
         $filename = 'attendance_export_' . now()->format('Ymd_His') . '.csv';
         $headers = [
             'Content-Type' => 'text/csv',
@@ -45,11 +45,7 @@ class BatchController extends Controller
 
         $callback = function() {
             $handle = fopen('php://output', 'w');
-
-            // Header row
             fputcsv($handle, ['Batch Name', 'Student Name', 'Date', 'Status']);
-
-            // Corrected query for attendance export
             $attendances = \DB::table('attendances')
                 ->join('classes', 'attendances.class_session_id', '=', 'classes.id')
                 ->join('batches', 'classes.batch_id', '=', 'batches.id')
@@ -61,7 +57,6 @@ class BatchController extends Controller
                     'attendances.status'
                 )
                 ->get();
-
             foreach ($attendances as $row) {
                 fputcsv($handle, [
                     $row->batch_name,
@@ -72,7 +67,48 @@ class BatchController extends Controller
             }
             fclose($handle);
         };
+        return new StreamedResponse($callback, 200, $headers);
+    }
 
+    // Export attendance for a specific batch
+    public function exportAttendanceByBatch(Request $request, $batch_id)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'admin') {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $filename = 'attendance_export_batch_' . $batch_id . '_' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=$filename",
+        ];
+
+        $callback = function() use ($batch_id) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['Batch Name', 'Student Name', 'Date', 'Status']);
+            $attendances = \DB::table('attendances')
+                ->join('classes', 'attendances.class_session_id', '=', 'classes.id')
+                ->join('batches', 'classes.batch_id', '=', 'batches.id')
+                ->join('users', 'attendances.student_id', '=', 'users.id')
+                ->where('batches.id', $batch_id)
+                ->select(
+                    'batches.name as batch_name',
+                    'users.name as student_name',
+                    'attendances.check_in_time',
+                    'attendances.status'
+                )
+                ->get();
+            foreach ($attendances as $row) {
+                fputcsv($handle, [
+                    $row->batch_name,
+                    $row->student_name,
+                    $row->check_in_time,
+                    $row->status
+                ]);
+            }
+            fclose($handle);
+        };
         return new StreamedResponse($callback, 200, $headers);
     }
 }
